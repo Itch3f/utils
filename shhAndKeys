@@ -1,0 +1,32 @@
+add user's public key to remote system
+
+generate key pait using ssh-keygen or puttygen
+  ssh-keygen -t rsa
+  
+copy .pub file to remote mchine
+
+scp ~/.ssh/id_rsa.pub username@karst.uits.iu.edu:
+
+
+loging to remote machine
+
+  mkdir -p ~/.ssh 
+  touch ~/.ssh/authorized_keys
+  
+  cat ~/id_rsa.pub >> ~/.ssh/authorized_keys
+  
+  You may want to check the contents of ~/.ssh/authorized_keys to make sure your public key was added properly; on the command line, enter:
+
+  more ~/.ssh/authorized_keys
+  
+  You may now safely delete the public key file (e.g., ~/id_rsa.pub) from your account on the remote system; on the command line, enter:
+  rm ~/id_rsa.pub
+Alternatively, if you prefer to keep a copy of your public key on the remote system, move it to your .ssh directory; on the command line, enter:
+
+  mv ~/id_rsa.pub ~/.ssh/
+  
+  ou now should be able to SSH to your account on the remote system (e.g., username@host2.somewhere.edu) from the computer (e.g., host1) that has your private key (e.g., ~/.ssh/id_dsa):
+  
+  
+  
+  for more details go to  https://kb.iu.edu/d/aews
