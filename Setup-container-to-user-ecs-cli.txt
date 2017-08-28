@@ -1,0 +1,71 @@
+
+
+
+
+how to  use AWS ECS cli from ecntos container and bash shell in it
+
+run centos container
+	
+	to update container and commit chnges used this command
+	docker  run -it -v //d/awsecs:/data centos bash
+	
+	to remove container after exit use this command
+	
+	docker  run --rm -it -v //d/awsecs:/data centos bash
+	
+
+To install the Amazon ECS CLI
+	sudo curl -o /usr/local/bin/ecs-cli https://s3.amazonaws.com/amazon-ecs-cli/ecs-cli-linux-amd64-latest
+
+(Optional) Verify the downloaded binary with the MD5 sum provided
+
+	echo "$(curl -s https://s3.amazonaws.com/amazon-ecs-cli/ecs-cli-linux-amd64-latest.md5) /usr/local/bin/ecs-cli" | md5sum -c -
+	curl -s https://s3.amazonaws.com/amazon-ecs-cli/ecs-cli-darwin-amd64-latest.md5 && md5 -q /usr/local/bin/ecs-cli
+
+For Linux systems (look for an OK in the output string):
+		
+	echo "$(curl -s https://s3.amazonaws.com/amazon-ecs-cli/ecs-cli-linux-amd64-latest.md5) /usr/local/bin/ecs-cli" | md5sum -c -
+
+
+Apply execute permissions to the binary.
+	
+	sudo chmod +x /usr/local/bin/ecs-cli
+	
+Verify that the CLI is working properly.
+	
+	ecs-cli --version
+
+Proceed to Configuring the Amazon ECS CLI.
+	
+	To configure the Amazon ECS CLI
+
+Configure the CLI with the following command, substituting us-west-2 with your desired AWS region, ecs-cli-demo with the name of an existing Amazon ECS cluster or a new cluster to use, and the $AWS_ACCESS_KEY_ID and $AWS_SECRET_ACCESS_KEY environment variables with your AWS credentials.
+
+	ecs-cli configure --region us-west-2 --access-key $AWS_ACCESS_KEY_ID --secret-key $AWS_SECRET_ACCESS_KEY --cluster ecs-cli-demo
+	
+	ecs-cli configure --region us-west-2 --access-key AKIAIK2YBTRS4V4ES6UQ --secret-key fZtAbiNzN9uXqdDV5ykaFfOf09A+c3j63qfS3JKC --cluster ecs-cli-demo
+	# exit
+	
+	Take a note of your container id by executing following command :
+
+   $ docker ps -a
+	e) save container as new image
+			(docker commit <container_id> new_image_name:tag_name(optional))
+   $ docker commit <container_id> ecntos:withecscli
+   $ docker commit <container_id> ecntos:withecscliv1
+   
+   run container again to see it retains setting 
+   
+   docker  run -it -v //d/awsecs:/data centos bash
+   docker  run -it -v //d/awsecs:/data ecntos:withecscli bash
+   docker  run -it -v //d/awsecs:/data ecntos:withecscliv1 bash
+   
+   http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_CLI_tutorial.html
+   
+   
+   Amazon ECS CLI Tutorial
+   
+   
+   Step 1: Create your Cluster
+	ecs-cli up --keypair dsm-aws-keys --capability-iam --size 2 --instance-type t2.medium
+   

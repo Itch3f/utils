@@ -1,0 +1,8 @@
+
+
+
+setPublicDnsName
+
+AWS - tutorials
+
+http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-ec2-instances.html
