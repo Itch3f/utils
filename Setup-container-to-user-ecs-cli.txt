@@ -1,4 +1,6 @@
+rabbitmq official image
 
+https://marketplace.automic.com/details/rabbitmq-official-docker-image
 
 
 
