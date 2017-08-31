@@ -2,6 +2,9 @@ http://www.ducea.com/2009/06/01/howto-update-dns-hostnames-automatically-for-you
 http://www.farshidesigns.com/blog/2015/05/14/setup-a-aws-ecs-container-purely-using-cli/
 
 
+how to connect to instance innec2
+
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/putty.html?icmpid=docs_ec2_console
 
 
 aws ec2 describe-instances --filters "Name=tag:aws:autoscaling:groupName,Values=awseb-e-479mgj6phg-stack-AWSEBAutoScalingGroup-BIA52S9NBX4T" "Name=instance-state-name,Values=running" | jq ".Reservations[].Instances[].PrivateDnsName" | xargs
