@@ -1,4 +1,8 @@
 http://www.dannemanne.com/posts/post-deployment_script_on_elastic_beanstalk_restart_delayed_job
+http://junkheap.net/blog/2013/05/20/elastic-beanstalk-post-deployment-scripts/
+
+http://www.eq8.eu/blogs/29-aws-elasticbeanstalk-deployment-hooks
+
 
 #!/usr/bin/env bash
 rabbitmqcontainerid=$( docker ps -a -q  --filter ancestor=rabbitmq:3-management)
