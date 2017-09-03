@@ -1,0 +1,4 @@
+AWS_ACCESS_KEY_ID = dfdas
+AWS_SECRET_ACCESS_KEY = fdf+c3j63qfS3JKC
+
+eb create --tags nodetype=rmqcnode

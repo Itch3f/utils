@@ -1,0 +1,111 @@
+http://www.ducea.com/2009/06/01/howto-update-dns-hostnames-automatically-for-your-amazon-ec2-instances/
+http://www.farshidesigns.com/blog/2015/05/14/setup-a-aws-ecs-container-purely-using-cli/
+
+
+
+for setup
+https://cloudacademy.com/blog/aws-security-groups-instance-level-security/
+
+
+
+how to connect to instance innec2
+
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/putty.html?icmpid=docs_ec2_console
+
+
+aws ec2 describe-instances --filters "Name=tag:aws:autoscaling:groupName,Values=awseb-e-479mgj6phg-stack-AWSEBAutoScalingGroup-BIA52S9NBX4T" "Name=instance-state-name,Values=running" | jq ".Reservations[].Instances[].PrivateDnsName" | xargs
+
+
+aws elasticbeanstalk retrieve-environment-info --environment-name EsureRabbitmqcluster-dev --info-type tail
+
+
+
+aws:autoscaling:groupName - RabbitmqDev-AWSEBAutoScalingGroup
+
+
+
+ip-172-31-25-
+
+
+
+
+
+awseb-e-pdpynpkbne-stack-AWSEBAutoScalingGroup-AP1RIJBQNFSE
+
+
+
+aws elb describe-load-balancers --query 'LoadBalancerDescriptions[].LoadBalancerName' --output text | xargs -n20 aws elb describe-tags --load-balancer-names --query "TagDescriptions[].[(Tags[?Key=='elasticbeanstalk:environment-name'].Value)[0],LoadBalancerName]" --output text | grep -v None
+
+
+
+aws ec2 describe-instances --query 'Reservations[*].Instances[*].[Placement.AvailabilityZone, State.Name, InstanceId]' --output text | grep us-west-2a | grep rabbitmq | awk '{print $3}'
+
+
+aws ec2 describe-instances --query 'Reservations[*].Instances[*].[Placement.AvailabilityZone, State.Name, InstanceId]' --output text | grep rabbitmq | awk '{print $3}'
+
+
+
+aws elasticbeanstalk describe-environments --environment-names EsureRabbitmqcluster-dev
+
+
+c --environment-name EsureRabbitmqcluster-dev
+
+aws ec2 describe-instances --filters "Name=tag:aws:autoscaling:groupName,Values=awseb-e-479mgj6phg-stack-AWSEBAutoScalingGroup-BIA52S9NBX4T" "Name=instance-state-name,Values=running" | jq ".Reservations[].Instances[].PrivateDnsName" | xargs
+
+
+
+
+{
+    "EnvironmentResources": {
+        "EnvironmentName": "EsureRabbitmqcluster-dev",
+        "AutoScalingGroups": [
+            {
+                "Name": "awseb-e-479mgj6phg-stack-AWSEBAutoScalingGroup-BIA52S9NBX4T"
+            }
+        ],
+        "Triggers": [],
+        "LoadBalancers": [
+            {
+                "Name": "arn:aws:elasticloadbalancing:eu-west-1:829070902612:loadbalancer/app/awseb-AWSEB-LGOK8BLCXFXP/b6e88eb9dbc58a8c"
+            }
+        ],
+        "Queues": [],
+        "Instances": [
+            {
+                "Id": "i-07db1d9d2ae400223"
+            },
+            {
+                "Id": "i-022b5cc6b28f7e252"
+            }
+        ],
+        "LaunchConfigurations": [
+            {
+                "Name": "awseb-e-479mgj6phg-stack-AWSEBAutoScalingLaunchConfiguration-1OYRX10QTK1W5"
+            }
+        ]
+    }
+}
+
+
+script
+
+#!/bin/bash
+
+function jsonval(){
+    temp=`echo $json | sed 's/\\\\\//\//g' | sed 's/[{}]//g' | awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}' | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' | grep -w $prop`
+    echo ${temp##*|}
+}
+
+
+dsjson = $(aws elasticbeanstalk describe-environment-resources --environment-name EsureRabbitmqcluster-dev)
+#prop ='Name'
+
+
+
+
+
+https://github.com/esure-dev/ops-poracy/blob/master/Dockerrun.aws.json
+https://github.com/esure-dev/ops-kong/blob/master/ENV.yml
+
+
+
