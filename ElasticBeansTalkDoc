@@ -9,3 +9,8 @@ curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq .r
 ec2-metadata -z | grep -Po "(us|sa|eu|ap)-(north|south|central)?(east|west)?-[0-9]+"
 
 curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq .region -r
+
+
+#!/bin/bash
+region=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq .region -r)
+echo $region
