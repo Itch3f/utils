@@ -14,3 +14,29 @@ curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq .r
 #!/bin/bash
 region=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq .region -r)
 echo $region
+
+//********************************************************************************************
+
+find autoscaling group name and assocoated instances
+
+
+#!/bin/bash
+
+TAG_NAME="aws:autoscaling:groupName"
+INSTANCE_ID="`wget -qO- http://instance-data/latest/meta-data/instance-id`"
+REGION="`wget -qO- http://instance-data/latest/meta-data/placement/availability-zone | sed -e 's:\([0-9][0-9]*\)[a-z]*\$
+:\\1:'`"
+
+TAG_VALUE="`aws ec2 describe-tags --filters "Name=resource-id,Values=$INSTANCE_ID" "Name=key,Values=$TAG_NAME" --region
+$REGION --output=text | cut -f5`"
+
+echo $TAG_VALUE
+
+export AWS_DEFAULT_REGION=$REGION
+
+DNSES=$(aws ec2 describe-instances --filters "Name=tag:aws:autoscaling:groupName,Values=$TAG_VALUE" "Name=instance-state
+-name,Values=running" | jq ".Reservations[].Instances[].PrivateDnsName" | xargs)
+
+echo $DNSES
+
+//********************************************************************************************
