@@ -1,0 +1,34 @@
+docker run -d --name kong-database   -p 5432:5432  -e "POSTGRES_USER=kong"     -e "POSTGRES_DB=kong"   postgres:9.4
+
+ docker run -it --rm  --link kong-database:kong-database    -e "KONG_DATABASE=postgres"     -e "KONG_PG_HOST=kong-database"    -e "KONG_CASSANDRA_CONTACT_POINTS=kong-database"     kong:latest kong migrations up
+
+ docker run -d --name kong  --link kong-database:kong-database     -e "KONG_DATABASE=postgres"     -e "KONG_PG_HOST=kong-database"     -e "KONG_CASSANDRA_CONTACT_POINTS=kong-database"     -e "KONG_PROXY_ACCESS_LOG=/dev/stdout"     -e "KONG_ADMIN_ACCESS_LOG=/dev/stdout"  -e "KONG_PROXY_ERROR_LOG=/dev/stderr"    -e "KONG_ADMIN_ERROR_LOG=/dev/stderr"     -p 8005:8000     -p 8448:8443     -p 8006:8001     -p 8449:8444     kong:latest	
+
+
+
+ curl -i -X POST  --url http://localhost:8006/apis/   --data 'name=example-api'   --data 'hosts=example.com'   --data 'upstream_url=http://httpbin.org'
+
+
+ curl -i -X GET  --url http://localhost:8006/   --header 'Host: example.com'
+
+enable auth plugin for example-api
+
+  curl -i -X POST --url http://localhost:8006/apis/example-api/plugins/  --data 'name=key-auth'
+
+Issue the following cURL request to verify that the key-auth plugin was properly configured on the API: Since you did not specify the required apikey header or parameter, the response should be 401 Unauthorized:
+
+  curl -i -X GET   --url http://localhost:8005/   --header 'Host: example.com'
+
+
+  create consumer
+
+  curl -i -X POST   --url http://localhost:8006/consumers/   --data "username=Jason"
+
+
+  Provision key credentials for your Consumer
+
+  curl -i -X POST --url http://localhost:8006/consumers/Jason/key-auth/  --data 'key=ENTER_KEY_HERE'
+
+  Verify that your Consumer credentials are valid
+
+  curl -i -X GET --url http://localhost:8005   --header "Host: example.com" --header "apikey: ENTER_KEY_HERE"
