@@ -1,0 +1,5 @@
+sitename: Theory and Practice
+og:
+  Url: https://siongui.github.io/
+  Locale: {{.Local_token}}
+  Source Location : {{.SourceDir}}

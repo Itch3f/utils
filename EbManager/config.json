@@ -1,0 +1,6 @@
+{
+  "serverMode": true,
+  "sourceDir": ".\\sourcedire\\package",
+  "targetDir": ".\\targetdir\\app",
+  "local_token": "test local"
+}
