@@ -1,0 +1,42 @@
+http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/using-features.managing.ec2.html
+
+
+
+get instance region from within 
+
+curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq .region -r
+
+ec2-metadata -z | grep -Po "(us|sa|eu|ap)-(north|south|central)?(east|west)?-[0-9]+"
+
+curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq .region -r
+
+
+#!/bin/bash
+region=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq .region -r)
+echo $region
+
+//********************************************************************************************
+
+find autoscaling group name and assocoated instances
+
+
+#!/bin/bash
+
+TAG_NAME="aws:autoscaling:groupName"
+INSTANCE_ID="`wget -qO- http://instance-data/latest/meta-data/instance-id`"
+REGION="`wget -qO- http://instance-data/latest/meta-data/placement/availability-zone | sed -e 's:\([0-9][0-9]*\)[a-z]*\$
+:\\1:'`"
+
+TAG_VALUE="`aws ec2 describe-tags --filters "Name=resource-id,Values=$INSTANCE_ID" "Name=key,Values=$TAG_NAME" --region
+$REGION --output=text | cut -f5`"
+
+echo $TAG_VALUE
+
+export AWS_DEFAULT_REGION=$REGION
+
+DNSES=$(aws ec2 describe-instances --filters "Name=tag:aws:autoscaling:groupName,Values=$TAG_VALUE" "Name=instance-state
+-name,Values=running" | jq ".Reservations[].Instances[].PrivateDnsName" | xargs)
+
+echo $DNSES
+
+//********************************************************************************************

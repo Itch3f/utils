@@ -1,0 +1,13 @@
+passing value of local variable to docker container using docker exec
+
+#!/bin/bash
+for number in 1 2 3 4 5
+do
+echo $number
+
+ rid=$( docker ps -a -q  --filter ancestor=rabbitmq:3-management)
+
+docker exec $rid bash  -c "echo hello@${number} - ${rid} >> /etc/test.txt"
+
+done
+exit 0
