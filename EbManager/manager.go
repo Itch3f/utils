@@ -111,6 +111,13 @@ func ExampleElasticBeanstalk_DescribeApplications_shared00() {
 		}
 		return
 	}
+	
+	if result != nil {
+
+		for _, element  := range result.Applications {
+			fmt.Printf("Application name  is [%s]\n", element.ApplicationName)
+		}
+	}
 	fmt.Println("printing result")
 	fmt.Println(result)
 }
