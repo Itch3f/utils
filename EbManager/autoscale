@@ -1,0 +1,234 @@
+package main
+
+import (
+	"fmt"
+	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"strings"
+
+)
+
+var settings struct {
+	ServerMode bool `json:"serverMode"`
+	SourceDir  string `json:"sourceDir"`
+	TargetDir  string `json:"targetDir"`
+	Local_token 	   string `json:"local_token"`
+}
+
+func GetApplicationAndEnvironemtnDetails(){
+
+	session := session.Must(session.NewSession(&aws.Config{
+		Region: aws.String("eu-west-1"),
+	}))
+	svc := elasticbeanstalk.New(session)
+	input := &elasticbeanstalk.DescribeApplicationsInput{}
+
+	result, err := svc.DescribeApplications(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			fmt.Println(err.Error())
+		}
+		return
+	}
+
+	//get associated envs for each application
+	fmt.Println(" No of pplications : ", len(result.Applications))
+
+	for _, application := range result.Applications {
+		if strings.Contains(*application.ApplicationName, "-home-") || strings.Contains(*application.ApplicationName, "-client-scoring") {
+
+			fmt.Println(*application.ApplicationName)
+
+			for _, apptemplate := range application.ConfigurationTemplates {
+				fmt.Println("	" + *apptemplate)
+
+				input := &elasticbeanstalk.DescribeEnvironmentResourcesInput{
+					EnvironmentName: aws.String(*apptemplate),
+				}
+
+				envresourceresult, err := svc.DescribeEnvironmentResources(input)
+
+				if err != nil {
+					if aerr, ok := err.(awserr.Error); ok {
+						switch aerr.Code() {
+						case elasticbeanstalk.ErrCodeInsufficientPrivilegesException:
+
+							fmt.Println(elasticbeanstalk.ErrCodeInsufficientPrivilegesException, aerr.Error())
+						default:
+							fmt.Println(" default - " +aerr.Message())
+						}
+					} else {
+						fmt.Println(err.Error())
+					}
+					//return
+				}
+
+				AddScheduledAction(envresourceresult)
+			}
+		}
+	}
+}
+
+func AddScheduledAction(envresourceresult *elasticbeanstalk.DescribeEnvironmentResourcesOutput) {
+	if envresourceresult != nil && envresourceresult.EnvironmentResources != nil && envresourceresult.EnvironmentResources.EnvironmentName != nil {
+		if strings.HasSuffix(strings.ToLower(*envresourceresult.EnvironmentResources.EnvironmentName), "-tstl") {
+			fmt.Println(" Adding auto scaling scheduled action to - ", *envresourceresult.EnvironmentResources.EnvironmentName)
+			UpdateEnvironmentAddAutoScalingScheduledActions(*envresourceresult.EnvironmentResources.EnvironmentName)
+		}
+	}
+}
+
+func RemoveScheduledAction(envresourceresult *elasticbeanstalk.DescribeEnvironmentResourcesOutput) {
+	if envresourceresult != nil && envresourceresult.EnvironmentResources != nil && envresourceresult.EnvironmentResources.EnvironmentName != nil {
+
+		if strings.HasSuffix(strings.ToLower(*envresourceresult.EnvironmentResources.EnvironmentName), "-tstl") {
+			//add scheduled action
+			fmt.Println(" Deleting auto scaling scheduled action from - ", *envresourceresult.EnvironmentResources.EnvironmentName)
+			DeleteScheduledAutoScalingAction(*envresourceresult.EnvironmentResources.EnvironmentName)
+		}
+	}
+}
+
+// To configure option settings
+func UpdateEnvironmentAddAutoScalingScheduledActions(envName string) {
+
+	svc := elasticbeanstalk.New(session.New(), aws.NewConfig().WithRegion("eu-west-1"))
+	input := &elasticbeanstalk.UpdateEnvironmentInput{
+
+		EnvironmentName: aws.String(envName),
+
+		OptionSettings: []*elasticbeanstalk.ConfigurationOptionSetting{
+			{
+				Namespace:  aws.String("aws:autoscaling:scheduledaction:"),
+				ResourceName: aws.String("ScheduledPeriodicScaleUp"),
+				OptionName: aws.String("MinSize"),
+				Value:      aws.String("1"),
+			},
+			{
+				Namespace:  aws.String("aws:autoscaling:scheduledaction:"),
+				ResourceName: aws.String("ScheduledPeriodicScaleUp"),
+				OptionName: aws.String("MaxSize"),
+				Value:      aws.String("1"),
+			},
+			{
+				Namespace:  aws.String("aws:autoscaling:scheduledaction:"),
+				ResourceName: aws.String("ScheduledPeriodicScaleUp"),
+				OptionName: aws.String("DesiredCapacity"),
+				Value:      aws.String("1"),
+			},
+			{
+				Namespace:  aws.String("aws:autoscaling:scheduledaction:"),
+				ResourceName: aws.String("ScheduledPeriodicScaleUp"),
+				OptionName: aws.String("Recurrence"),
+				Value:      aws.String("0 7 * * MON-FRI"),
+			},
+
+			{
+				Namespace:  aws.String("aws:autoscaling:scheduledaction:"),
+				ResourceName: aws.String("ScheduledPeriodicScaleDown"),
+				OptionName: aws.String("MinSize"),
+				Value:      aws.String("0"),
+			},
+			{
+				Namespace:  aws.String("aws:autoscaling:scheduledaction:"),
+				ResourceName: aws.String("ScheduledPeriodicScaleDown"),
+				OptionName: aws.String("MaxSize"),
+				Value:      aws.String("0"),
+			},
+			{
+				Namespace:  aws.String("aws:autoscaling:scheduledaction:"),
+				ResourceName: aws.String("ScheduledPeriodicScaleDown"),
+				OptionName: aws.String("DesiredCapacity"),
+				Value:      aws.String("0"),
+			},
+			{
+				Namespace:  aws.String("aws:autoscaling:scheduledaction:"),
+				ResourceName: aws.String("ScheduledPeriodicScaleDown"),
+				OptionName: aws.String("Recurrence"),
+				Value:      aws.String("0 20 * * MON-FRI"),
+			},
+		},
+	}
+
+	result, err := svc.UpdateEnvironment(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case elasticbeanstalk.ErrCodeInsufficientPrivilegesException:
+				fmt.Println(elasticbeanstalk.ErrCodeInsufficientPrivilegesException, aerr.Error())
+			case elasticbeanstalk.ErrCodeTooManyBucketsException:
+				fmt.Println(elasticbeanstalk.ErrCodeTooManyBucketsException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			fmt.Println(err.Error())
+		}
+		return
+	}
+
+	fmt.Println(*result.Status)
+}
+
+func DeleteScheduledAutoScalingAction(envname string) {
+
+	svc := elasticbeanstalk.New(session.New(), aws.NewConfig().WithRegion("eu-west-1"))
+	input := &elasticbeanstalk.UpdateEnvironmentInput{
+
+		EnvironmentName: aws.String(envname),
+
+		OptionsToRemove : []*elasticbeanstalk.OptionSpecification {
+			{
+				Namespace:  aws.String("aws:autoscaling:scheduledaction:"),
+				ResourceName: aws.String("ScheduledPeriodicScaleDown"),
+				OptionName: aws.String("MinSize"),
+			},
+			{
+				Namespace:  aws.String("aws:autoscaling:scheduledaction:"),
+				ResourceName: aws.String("ScheduledPeriodicScaleDown"),
+				OptionName: aws.String("MaxSize"),
+			},
+			{
+				Namespace:  aws.String("aws:autoscaling:scheduledaction:"),
+				ResourceName: aws.String("ScheduledPeriodicScaleDown"),
+				OptionName: aws.String("DesiredCapacity"),
+			},
+			{
+				Namespace:  aws.String("aws:autoscaling:scheduledaction:"),
+				ResourceName: aws.String("ScheduledPeriodicScaleDown"),
+				OptionName: aws.String("Recurrence"),
+			},
+		},
+	}
+
+	result, err := svc.UpdateEnvironment(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case elasticbeanstalk.ErrCodeInsufficientPrivilegesException:
+				fmt.Println(elasticbeanstalk.ErrCodeInsufficientPrivilegesException, aerr.Error())
+			case elasticbeanstalk.ErrCodeTooManyBucketsException:
+				fmt.Println(elasticbeanstalk.ErrCodeTooManyBucketsException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			fmt.Println(err.Error())
+		}
+		return
+	}
+
+	fmt.Println(result)
+}
+
+func main() {
+	GetApplicationAndEnvironemtnDetails()
+	return
+}
